@@ -1,8 +1,11 @@
 const express = require('express')
 const expressGraphQL = require('express-graphql').graphqlHTTP
 const {
-    GraphQLSchema,
+    GraphQLInt,
+    GraphQLList,
+    GraphQLNonNull,
     GraphQLObjectType,
+    GraphQLSchema,
     GraphQLString
 } = require('graphql')
 
@@ -27,20 +30,35 @@ const books = [
 ]
 /* ============ End: Test Database with sample data ============ */
 
-const schema = new GraphQLSchema({
-    query: new GraphQLObjectType({
-        name: 'Hello_World', 
-        fields: () => ({
-            message: { 
-                type: GraphQLString,
-                resolve: () => 'Hello World'
-            }
-        })
+const BookType = new GraphQLObjectType({
+    name: 'Book',
+    description: 'This represents a book written by an author',
+    fields: () => ({
+        id: { type: GraphQLNonNull(GraphQLInt) },
+        name: { type: GraphQLNonNull(GraphQLString) },
+        authorId: { type: GraphQLNonNull(GraphQLInt) }
     })
+})
+
+const RootQueryType = new GraphQLObjectType({
+    name: 'Query',
+    description: 'Root Query',
+    fields: () => ({
+      books: {
+        type: new GraphQLList(BookType),
+        description: 'List of All Books',
+        resolve: () => books
+      }
+    })
+  })
+
+const schema = new GraphQLSchema({
+    query: RootQueryType
 })
 
 app.use('/graphql', expressGraphQL({
     schema: schema, 
     graphiql: true
 }))
+
 app.listen(5000, () => console.log('Server is running and listening on port 5000...'))
